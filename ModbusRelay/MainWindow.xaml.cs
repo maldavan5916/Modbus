@@ -75,19 +75,18 @@ namespace ModbusRelay
                 fullRequest[request.Length + 1] = (byte)(crc >> 8);
 
                 // Send the request
-                OutputList.Items.Add($" ⬆️ : {String.Join(" ", fullRequest.Select(num => num.ToString("X2")))}");
+                OutputList.Items.Add($"⬆️  : {String.Join(" ", fullRequest.Select(num => num.ToString("X2")))}");
                 port.Write(fullRequest, 0, fullRequest.Length);
 
                 // Read the response
                 try
                 {
                     // Buffer to store the response
-                    byte[] buffer = new byte[256];
+                    byte[] buffer = new byte[8];
                     int bytesRead = port.Read(buffer, 0, buffer.Length);
 
                     // Convert the response to a readable string
-                    string response = String.Join(" ", buffer.Take(bytesRead).Select(b => b.ToString("X2")));
-                    OutputList.Items.Add($" ⬇️ : {response}");
+                    OutputList.Items.Add($"  ⬇️: {String.Join(" ", buffer.Select(b => b.ToString("X2")))}"); //.Take(bytesRead)
                 }
                 catch (TimeoutException)
                 {
