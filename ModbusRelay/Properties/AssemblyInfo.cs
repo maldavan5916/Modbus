@@ -6,7 +6,7 @@ using System.Windows;
 // набор атрибутов. Измените значения этих атрибутов, чтобы изменить сведения,
 // связанные со сборкой.
 [assembly: AssemblyTitle("ModbusRelay")]
-[assembly: AssemblyDescription("Modbus 485 Relay 2CH V1.1")]
+[assembly: AssemblyDescription("Modbus 485 Relay 2CH V1.1\nhttps://github.com/maldavan5916/Modbus")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("VacTime")]
 [assembly: AssemblyProduct("ModbusRelay")]
