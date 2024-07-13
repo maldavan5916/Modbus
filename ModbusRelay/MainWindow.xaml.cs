@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO.Ports;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace ModbusRelay
 {
@@ -44,6 +47,50 @@ namespace ModbusRelay
 
                 if ((bool)R2on.IsChecked) WriteSerial(port, rate, adr, 1, 0xFF);
                 if ((bool)R2off.IsChecked) WriteSerial(port, rate, adr, 1, 0);
+            }
+            catch (Exception ex)
+            {
+                OutputList.Items.Add($"err: {ex.Message}");
+            }
+        }
+
+
+        private void SwithRelay1_click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn)
+            {
+                SwithRelay(btn, 0);
+            }
+        }
+
+        private void SwithRelay2_click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn)
+            {
+                SwithRelay(btn, 1);
+            }
+        }
+
+        private void SwithRelay(Button btn, byte Nrelay)
+        {
+            try
+            {
+                byte adr = Convert.ToByte(AdressBox.Text);
+                int rate = Convert.ToInt32(BaudRateCB.Text);
+                string port = PortCB.Text;
+
+                if (btn.Content.ToString() == "OFF")
+                {
+                    WriteSerial(port, rate, adr, Nrelay, 0xFF);
+                    btn.Content = "ON";
+                    btn.Background = new SolidColorBrush(Colors.Green);
+                }
+                else
+                {
+                    WriteSerial(port, rate, adr, Nrelay, 0);
+                    btn.Content = "OFF";
+                    btn.Background = null;
+                }
             }
             catch (Exception ex)
             {
