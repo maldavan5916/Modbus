@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO.Ports;
 using System.Linq;
 using System.Windows;
@@ -60,6 +59,11 @@ namespace ModbusRelay
             if (sender is Button btn)
             {
                 SwithRelay(btn, 0);
+                switch (btn.Content.ToString())
+                {
+                    case "ON": R1on.IsChecked = true; break;
+                    case "OFF": R1off.IsChecked = true; break;
+                }
             }
         }
 
@@ -68,6 +72,11 @@ namespace ModbusRelay
             if (sender is Button btn)
             {
                 SwithRelay(btn, 1);
+                switch (btn.Content.ToString())
+                {
+                    case "ON": R2on.IsChecked = true; break;
+                    case "OFF": R2off.IsChecked = true; break;
+                }
             }
         }
 
@@ -107,37 +116,66 @@ namespace ModbusRelay
                 port.DataBits = 8;
                 port.StopBits = StopBits.One;
                 port.ReadTimeout = Properties.Settings.Default.TimeOut;
-                port.Open();
+                port.WriteTimeout = Properties.Settings.Default.TimeOut;
 
-                // Convert the string to a byte array
-                byte[] request = byteString.Split(' ').Select(s => Convert.ToByte(s, 16)).ToArray();
-
-                // Calculate CRC (checksum)
-                ushort crc = CalculateCRC(request);
-
-                // Add CRC to the request
-                byte[] fullRequest = new byte[request.Length + 2];
-                Array.Copy(request, fullRequest, request.Length);
-                fullRequest[request.Length] = (byte)(crc & 0xFF);
-                fullRequest[request.Length + 1] = (byte)(crc >> 8);
-
-                // Send the request
-                OutputList.Items.Add($"⬆️  : {String.Join(" ", fullRequest.Select(num => num.ToString("X2")))}");
-                port.Write(fullRequest, 0, fullRequest.Length);
-
-                // Read the response
                 try
                 {
-                    // Buffer to store the response
-                    byte[] buffer = new byte[8];
-                    int bytesRead = port.Read(buffer, 0, buffer.Length);
+                    port.Open();
 
-                    // Convert the response to a readable string
-                    OutputList.Items.Add($"  ⬇️: {String.Join(" ", buffer.Select(b => b.ToString("X2")))}"); //.Take(bytesRead)
+                    // Convert the string to a byte array
+                    byte[] request = byteString.Split(' ').Select(s => Convert.ToByte(s, 16)).ToArray();
+
+                    // Calculate CRC
+                    byte[] crc = CalculateCRC(request);
+
+                    // Add CRC to the request
+                    byte[] fullRequest = new byte[request.Length + 2];
+                    Array.Copy(request, fullRequest, request.Length);
+                    fullRequest[request.Length] = crc[0];
+                    fullRequest[request.Length + 1] = crc[1];
+
+                    // Отправка запроса
+                    OutputList.Items.Add($"<- : {String.Join(" ", fullRequest.Select(num => num.ToString("X2")))}");
+                    port.Write(fullRequest, 0, fullRequest.Length);
+
+                    // Создание буфера для ответа
+                    byte[] buffer = new byte[8];
+                    int bytesRead = 0;
+                    int totalBytesToRead = buffer.Length;
+                    int attempts = 0;
+
+                    // Чтение данных из последовательного порта
+                    while (bytesRead < totalBytesToRead && attempts < 10)
+                    {
+                        if (port.BytesToRead > 0)
+                        {
+                            bytesRead += port.Read(buffer, bytesRead, totalBytesToRead - bytesRead);
+                        }
+                        else
+                        {
+                            System.Threading.Thread.Sleep(50); // Пауза для ожидания данных
+                            attempts++;
+                        }
+                    }
+
+                    // Проверка результата чтения
+                    if (bytesRead > 0)
+                    {
+                        string crcCheck = CheckCRC(buffer) ? "OK" : "MISMATCH";
+                        OutputList.Items.Add($" ->: {String.Join(" ", buffer.Select(b => b.ToString("X2")))} [CRC {crcCheck}]");
+                    }
                 }
                 catch (TimeoutException)
                 {
-                    OutputList.Items.Add("err: Read timeout");
+                    OutputList.Items.Add("err: Timeout");
+                }
+                catch (Exception ex)
+                {
+                    OutputList.Items.Add($"err: {ex.Message}");
+                }
+                finally
+                {
+                    if (port.IsOpen) port.Close();
                 }
             }
         }
@@ -147,7 +185,7 @@ namespace ModbusRelay
             WriteSerial(comport, baudrate, $"{slaveId.ToString("X2")} 05 00 {Nr} {Sr.ToString("X2")} 00");
         }
 
-        static ushort CalculateCRC(byte[] data)
+        static byte[] CalculateCRC(byte[] data)
         {
             ushort crc = 0xFFFF;
             foreach (byte b in data)
@@ -161,7 +199,19 @@ namespace ModbusRelay
                         crc >>= 1;
                 }
             }
-            return crc;
+
+            // Преобразование 16-битного целого в массив из 2 байт
+            byte[] crcBytes = new byte[2];
+            crcBytes[0] = (byte)(crc & 0xFF); // Младший байт
+            crcBytes[1] = (byte)((crc >> 8) & 0xFF); // Старший байт
+            return crcBytes;
+        }
+
+        static bool CheckCRC(byte[] data)
+        {
+            byte[] receivedCrc = data.Skip(data.Length - 2).Take(2).ToArray();
+            byte[] calculatedCrc = CalculateCRC(data.Take(data.Length - 2).ToArray());
+            return receivedCrc.SequenceEqual(calculatedCrc);
         }
 
         static void OpenBrowser(string url)
