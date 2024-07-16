@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO.Ports;
-using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -54,18 +54,19 @@ namespace ModbusRelay
                 }
                 else
                 {
-                    result =  modBus.Write($"{adr.ToString("X2")} 05 00 {Nrelay} 00 00");
+                    result = modBus.Write($"{adr.ToString("X2")} 05 00 {Nrelay} 00 00");
                     btn.Content = "OFF";
                     btn.Background = null;
                 }
 
-                OutputList.Text += $"<- : {result}\n" +
-                                   $" ->: {modBus.Read()}\n";
+                OutputList.Text += $"<- : {result}\n";
+                OutputList.Text += $" ->: {modBus.Read()}\n\n";
+
                 modBus.Dispose();
             }
             catch (Exception ex)
             {
-                OutputList.Text += $"err: {ex.Message}\n";
+                OutputList.Text += $"err: {ex.Message}\n\n";
             }
         }
 
@@ -91,7 +92,7 @@ namespace ModbusRelay
             }
             catch (Exception ex)
             {
-                OutputList.Text += $"err: {ex.Message}\n";
+                OutputList.Text += $"err: {ex.Message}\n\n";
             }
         }
 
@@ -108,19 +109,57 @@ namespace ModbusRelay
                 string port = PortCB.Text;
 
                 ModBus modBus = new ModBus(port, rate);
-                OutputList.Text += $"<- : {modBus.Write(CommandBox.Text)}\n" +
-                                   $" ->: {modBus.Read()}\n";
+                
+                OutputList.Text += $"<- : {modBus.Write(CommandBox.Text)}\n";
+                OutputList.Text += $" ->: {modBus.Read()}\n\n";
+                
                 modBus.Dispose();
             }
             catch (Exception ex)
             {
-                OutputList.Text += $"err: {ex.Message}\n";
+                OutputList.Text += $"err: {ex.Message}\n\n";
             }
         }
 
         private void GetAdress_click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                int rate = Convert.ToInt32(BaudRateCB.Text);
+                string port = PortCB.Text;
 
+                ModBus modBus = new ModBus(port, rate);
+
+                string writeResponse = modBus.Write("00 03 00 00 00 01");
+                OutputList.Text += $"<- : {writeResponse}\n";
+
+                string readResponse = modBus.Read();
+                OutputList.Text += $" ->: {readResponse}\n\n";
+
+                AdressBox.Text = GetAdressFromResponse(readResponse).ToString();
+
+                modBus.Dispose();
+            }
+            catch (Exception ex)
+            {
+                OutputList.Text += $"err: {ex.Message}\n\n";
+            }
+        }
+
+        static byte GetAdressFromResponse(string response)
+        {
+            if (response.Contains("[CRC MISMATCH]")) throw new ArgumentException("Контрольная сумма (CRC) не совпала. Адрес не получен");
+
+            // Регулярное выражение для извлечения пятого байта
+            Regex byteRegex = new Regex(@"(?:[0-9A-Fa-f]{2}\s+){4}([0-9A-Fa-f]{2})");
+            Match byteMatch = byteRegex.Match(response);
+
+            if (!byteMatch.Success) throw new ArgumentException("Неверный формат строки: не найден пятый байт.");
+
+            string AdressHex = byteMatch.Groups[1].Value;
+            byte AdressDec = Convert.ToByte(AdressHex, 16);
+
+            return AdressDec;
         }
     }
 }
