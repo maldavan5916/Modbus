@@ -175,11 +175,25 @@ namespace ModbusRelay
         {
             try
             {
-                throw new NotImplementedException();
+                byte newAdress = Convert.ToByte(AdressBox.Text);
+
+                string command = $"00 10 00 00 00 01 02 00 {newAdress.ToString("X2")}";
+
+                int rate = Convert.ToInt32(BaudRateCB.Text);
+                string port = PortCB.Text;
+
+                ModBus modBus = new ModBus(port, rate);
+
+                OutputList.Text += $"<- : {modBus.Write(command)}\n";
+                OutputList.Text += $" ->: {modBus.Read()}\n\n";
+
+                modBus.Dispose();
             }
             catch (Exception ex)
             {
                 OutputList.Text += $"err: {ex.Message}\n\n";
+                ChangeAdress_MenuClick(sender, e);
+                return;
             }
 
             AdressLabel.Content = "Aдрес";
@@ -198,40 +212,60 @@ namespace ModbusRelay
             CancelAdressChangeBtn.Visibility = Visibility.Collapsed;
         }
 
-        private void ChangeBautRate_MenuClick(object sender, RoutedEventArgs e)
+        private void ChangeBaudRate_MenuClick(object sender, RoutedEventArgs e)
         {
-            BautRateLabel.Content = "Новая скорость";
             R1gb.Visibility = Visibility.Collapsed;
             R2gb.Visibility = Visibility.Collapsed;
-            BautRateChangeBtn.Visibility = Visibility.Visible;
-            CancelBautRateChangeBtn.Visibility = Visibility.Visible;
+            NewBaudRateLabel.Visibility = Visibility.Visible;
+            NewBaudRateCB.Visibility = Visibility.Visible;
+            BaudRateChangeBtn.Visibility = Visibility.Visible;
+            CancelBaudRateChangeBtn.Visibility = Visibility.Visible;
         }
 
-        private void ChangeBautRate_BtnClick(object sender, RoutedEventArgs e)
+        private void ChangeBaudRate_BtnClick(object sender, RoutedEventArgs e)
         {
             try
             {
-                throw new NotImplementedException();
+                byte adress = Convert.ToByte(AdressBox.Text);
+                byte newBautRate = (byte)NewBaudRateCB.SelectedIndex;
+
+                string command = $"{adress.ToString("X2")} B0 00 00 {newBautRate.ToString("X2")} 00";
+
+                int rate = Convert.ToInt32(BaudRateCB.Text);
+                string port = PortCB.Text;
+
+                ModBus modBus = new ModBus(port, rate);
+
+                OutputList.Text += $"<- : {modBus.Write(command)}\n";
+                OutputList.Text += $" ->: {modBus.Read()}\n\n";
+
+                BaudRateCB.SelectedIndex = newBautRate;
+
+                modBus.Dispose();
             }
             catch (Exception ex)
             {
                 OutputList.Text += $"err: {ex.Message}\n\n";
+                ChangeBaudRate_MenuClick(sender, e);
+                return;
             }
 
-            BautRateLabel.Content = "Cкорость";
             R1gb.Visibility = Visibility.Visible;
             R2gb.Visibility = Visibility.Visible;
-            BautRateChangeBtn.Visibility = Visibility.Collapsed;
-            CancelBautRateChangeBtn.Visibility = Visibility.Collapsed;
+            NewBaudRateLabel.Visibility = Visibility.Collapsed;
+            NewBaudRateCB.Visibility = Visibility.Collapsed;
+            BaudRateChangeBtn.Visibility = Visibility.Collapsed;
+            CancelBaudRateChangeBtn.Visibility = Visibility.Collapsed;
         }
 
-        private void CancelChangeBautRate_BtnClick(object sender, RoutedEventArgs e)
+        private void CancelChangeBaudRate_BtnClick(object sender, RoutedEventArgs e)
         {
-            BautRateLabel.Content = "Cкорость";
             R1gb.Visibility = Visibility.Visible;
             R2gb.Visibility = Visibility.Visible;
-            BautRateChangeBtn.Visibility = Visibility.Collapsed;
-            CancelBautRateChangeBtn.Visibility = Visibility.Collapsed;
+            NewBaudRateLabel.Visibility = Visibility.Collapsed;
+            NewBaudRateCB.Visibility = Visibility.Collapsed;
+            BaudRateChangeBtn.Visibility = Visibility.Collapsed;
+            CancelBaudRateChangeBtn.Visibility = Visibility.Collapsed;
         }
     }
 }
