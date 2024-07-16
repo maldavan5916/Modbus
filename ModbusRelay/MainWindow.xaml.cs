@@ -164,6 +164,7 @@ namespace ModbusRelay
 
         private void ChangeAdress_MenuClick(object sender, RoutedEventArgs e)
         {
+            CancelChangeBaudRate_BtnClick(sender, e);
             AdressLabel.Content = "Новый адрес";
             R1gb.Visibility = Visibility.Collapsed;
             R2gb.Visibility = Visibility.Collapsed;
@@ -214,6 +215,7 @@ namespace ModbusRelay
 
         private void ChangeBaudRate_MenuClick(object sender, RoutedEventArgs e)
         {
+            CancelChangeAdress_BtnClick(sender, e);
             R1gb.Visibility = Visibility.Collapsed;
             R2gb.Visibility = Visibility.Collapsed;
             NewBaudRateLabel.Visibility = Visibility.Visible;
