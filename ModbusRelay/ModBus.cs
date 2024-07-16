@@ -53,7 +53,7 @@ namespace ModbusRelay
         public string Read()
         {
             // Создание буфера для ответа
-            byte[] buffer = new byte[8];
+            byte[] buffer = new byte[255];
             int bytesRead = 0;
             int totalBytesToRead = buffer.Length;
             int attempts = 0;
@@ -72,9 +72,15 @@ namespace ModbusRelay
                 }
             }
 
+            // Уменьшаем буфер до фактически прочитанного объема данных
+            Array.Resize(ref buffer, bytesRead);
+
+            if (buffer.Length == 0) return "Нет данных";
+
             string crcCheck = CheckCRC(buffer) ? "OK" : "MISMATCH";
             return $"{String.Join(" ", buffer.Select(b => b.ToString("X2")))} [CRC {crcCheck}]";
         }
+
 
         static byte[] CalculateCRC(byte[] data)
         {

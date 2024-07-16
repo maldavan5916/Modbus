@@ -109,10 +109,10 @@ namespace ModbusRelay
                 string port = PortCB.Text;
 
                 ModBus modBus = new ModBus(port, rate);
-                
+
                 OutputList.Text += $"<- : {modBus.Write(CommandBox.Text)}\n";
                 OutputList.Text += $" ->: {modBus.Read()}\n\n";
-                
+
                 modBus.Dispose();
             }
             catch (Exception ex)
@@ -160,6 +160,78 @@ namespace ModbusRelay
             byte AdressDec = Convert.ToByte(AdressHex, 16);
 
             return AdressDec;
+        }
+
+        private void ChangeAdress_MenuClick(object sender, RoutedEventArgs e)
+        {
+            AdressLabel.Content = "Новый адрес";
+            R1gb.Visibility = Visibility.Collapsed;
+            R2gb.Visibility = Visibility.Collapsed;
+            AdressChangeBtn.Visibility = Visibility.Visible;
+            CancelAdressChangeBtn.Visibility = Visibility.Visible;
+        }
+
+        private void ChangeAdress_BtnClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                throw new NotImplementedException();
+            }
+            catch (Exception ex)
+            {
+                OutputList.Text += $"err: {ex.Message}\n\n";
+            }
+
+            AdressLabel.Content = "Aдрес";
+            R1gb.Visibility = Visibility.Visible;
+            R2gb.Visibility = Visibility.Visible;
+            AdressChangeBtn.Visibility = Visibility.Collapsed;
+            CancelAdressChangeBtn.Visibility = Visibility.Collapsed;
+        }
+
+        private void CancelChangeAdress_BtnClick(object sender, RoutedEventArgs e)
+        {
+            AdressLabel.Content = "Aдрес";
+            R1gb.Visibility = Visibility.Visible;
+            R2gb.Visibility = Visibility.Visible;
+            AdressChangeBtn.Visibility = Visibility.Collapsed;
+            CancelAdressChangeBtn.Visibility = Visibility.Collapsed;
+        }
+
+        private void ChangeBautRate_MenuClick(object sender, RoutedEventArgs e)
+        {
+            BautRateLabel.Content = "Новая скорость";
+            R1gb.Visibility = Visibility.Collapsed;
+            R2gb.Visibility = Visibility.Collapsed;
+            BautRateChangeBtn.Visibility = Visibility.Visible;
+            CancelBautRateChangeBtn.Visibility = Visibility.Visible;
+        }
+
+        private void ChangeBautRate_BtnClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                throw new NotImplementedException();
+            }
+            catch (Exception ex)
+            {
+                OutputList.Text += $"err: {ex.Message}\n\n";
+            }
+
+            BautRateLabel.Content = "Cкорость";
+            R1gb.Visibility = Visibility.Visible;
+            R2gb.Visibility = Visibility.Visible;
+            BautRateChangeBtn.Visibility = Visibility.Collapsed;
+            CancelBautRateChangeBtn.Visibility = Visibility.Collapsed;
+        }
+
+        private void CancelChangeBautRate_BtnClick(object sender, RoutedEventArgs e)
+        {
+            BautRateLabel.Content = "Cкорость";
+            R1gb.Visibility = Visibility.Visible;
+            R2gb.Visibility = Visibility.Visible;
+            BautRateChangeBtn.Visibility = Visibility.Collapsed;
+            CancelBautRateChangeBtn.Visibility = Visibility.Collapsed;
         }
     }
 }
